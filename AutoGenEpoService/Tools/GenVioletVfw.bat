@@ -1,0 +1,1 @@
+GenVioletFw C:\updateWithDount\Violet\fw\MtkGpsTool\EPO_GR_3_1.DAT VFWGPS01 C:\updateWithDount\Violet\fw\EPO_GR_3_1.vfw
