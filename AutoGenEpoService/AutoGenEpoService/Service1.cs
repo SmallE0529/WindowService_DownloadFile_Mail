@@ -125,7 +125,8 @@ namespace AutoGenEpoService
         public static void GenEpoVfw()
         {
             ProcessStartInfo ActionGenEpo = new ProcessStartInfo();
-            ActionGenEpo.FileName = MtkGpsBat;//執行的檔案名稱
+            ActionGenEpo.FileName = "GenVioletVfw.bat";//執行的檔案名稱
+            ActionGenEpo.WorkingDirectory = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool";
             Process star = Process.Start(ActionGenEpo);
 
             if (star.Start())
