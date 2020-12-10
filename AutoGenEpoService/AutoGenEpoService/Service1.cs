@@ -22,6 +22,7 @@ namespace AutoGenEpoService
 
         private static bool InternetConnected { get; set; }
         
+        /*
         // for Test
         private static string path = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool\AutoGetMtkEpo.log";
         private static string ConfigFile = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool\EpoConfig.cfg";
@@ -29,8 +30,8 @@ namespace AutoGenEpoService
         private static string MtkGpsEpoFile = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool\EPO_GR_3_1.DAT";
         private static string MtkGpsEpoVfw = @"C:\updateWithDount\VivoWatchBPtest\fw\EPO_GR_3_1.vfw";
         private static string FwInfoFile = @"C:\updateWithDount\VivoWatchBPtest\fw\FW_info.txt";
-
-        /*
+        */
+        
         // for Online
         private static string path = @"C:\updateWithDount\Violet\fw\MtkGpsTool\AutoGetMtkEpo.log";
         private static string ConfigFile = @"C:\updateWithDount\Violet\fw\MtkGpsTool\EpoConfig.cfg";
@@ -38,9 +39,7 @@ namespace AutoGenEpoService
         private static string MtkGpsEpoFile = @"C:\updateWithDount\Violet\fw\MtkGpsTool\EPO_GR_3_1.DAT";
         private static string MtkGpsEpoVfw = @"C:\updateWithDount\Violet\fw\EPO_GR_3_1.vfw";
         private static string FwInfoFile = @"C:\updateWithDount\Violet\fw\FW_info.txt";
-        */
-
-        //private static string FwInfoBetaFile = @"C:\updateWithDount\VivoWatchBP\fw\FW_info_Beta.txt";
+        
 
         private static readonly HttpClient httpClient = new HttpClient();
         private static HttpResponseMessage response;
@@ -126,7 +125,7 @@ namespace AutoGenEpoService
         {
             ProcessStartInfo ActionGenEpo = new ProcessStartInfo();
             ActionGenEpo.FileName = "GenVioletVfw.bat";//執行的檔案名稱
-            ActionGenEpo.WorkingDirectory = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool";
+            ActionGenEpo.WorkingDirectory = @"C:\updateWithDount\Violet\fw\MtkGpsTool";
             Process star = Process.Start(ActionGenEpo);
 
             if (star.Start())
@@ -248,12 +247,12 @@ namespace AutoGenEpoService
 
             MimeMessage message = new MimeMessage();
             message.From.Add(new MailboxAddress(cfg[0], cfg[1]));
-            message.To.Add(new MailboxAddress(cfg[0], cfg[1]));
+            message.To.Add(new MailboxAddress("", cfg[1]));
 
 
             for (int i = 3; i < cfg.Length; i++)
             {
-                message.To.Add(new MailboxAddress(cfg[0], cfg[i]));
+                message.To.Add(new MailboxAddress("", cfg[i]));
             }
 
             message.Subject = "MTK GPS EPO Daily Report";
