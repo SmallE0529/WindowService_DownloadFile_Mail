@@ -39,7 +39,7 @@ namespace AutoGenEpoService
         private static string MtkGpsEpoFile = @"C:\updateWithDount\Violet\fw\MtkGpsTool\EPO_GR_3_1.DAT";
         private static string MtkGpsEpoVfw = @"C:\updateWithDount\Violet\fw\EPO_GR_3_1.vfw";
         private static string FwInfoFile = @"C:\updateWithDount\Violet\fw\FW_info.txt";
-        
+        private static string FwInfoFileBeta = @"C:\updateWithDount\Violet\fw\FW_info_Beta.txt";
 
         private static readonly HttpClient httpClient = new HttpClient();
         private static HttpResponseMessage response;
@@ -162,6 +162,12 @@ namespace AutoGenEpoService
                 return;
             }
 
+            if (!File.Exists(FwInfoFileBeta))
+            {
+                File.AppendAllText(path, DateTime.Now + ":\t" + "FW_info_Beta File not Exists\r\n");
+                return;
+            }
+
             if (!File.Exists(MtkGpsEpoFile))
             {
                 File.AppendAllText(path, DateTime.Now + ":\t" + "EPO_GR_3_1 DAT File not Exists\r\n");
@@ -178,6 +184,7 @@ namespace AutoGenEpoService
             var MtkGpsEpoData = File.ReadAllBytes(MtkGpsEpoFile);
             var MtkGpsVfwData = File.ReadAllBytes(MtkGpsEpoVfw);
             var FwInfoData = File.ReadAllLines(FwInfoFile);
+            var FwInfoDataBeta = File.ReadAllLines(FwInfoFileBeta);
 
             UInt32 GPS_Time = 0;
             UInt32 GPS_Week = 0;
@@ -218,6 +225,23 @@ namespace AutoGenEpoService
             string GpsFwInfo = " " + "\"GPS\"" + ":{" + "\"Ver\":" + "\"" + EpoVerInfo + "\"" + ",\"File\":\"EPO_GR_3_1.vfw\"," + "\"CRC\":" + "\"" + sBinFileCrc32 + "\"" + "},";
             FwInfoData[GpsLine] = GpsFwInfo;
             File.WriteAllLines(FwInfoFile, FwInfoData);
+
+            /*
+             * Beta Firmware Info 
+             */
+            int GpsLineBeta = 0;
+
+            for (int j = 0; j < FwInfoDataBeta.Length; j++)
+            {
+                if (FwInfoDataBeta[j].Contains(strGpsCompare))
+                {
+                    GpsLineBeta = j;
+                    break;
+                }
+            }
+
+            FwInfoDataBeta[GpsLineBeta] = GpsFwInfo;
+            File.WriteAllLines(FwInfoFileBeta, FwInfoDataBeta);
         }
 
         static public UInt32 CalculateCrc32(byte[] buf, UInt32 crc)
