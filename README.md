@@ -12,4 +12,4 @@ Install service step:
 3. InstallUtil C:\Folder\Service.exe
 
 If you want stop service:
-InstallUtil /u C:\Folder\Service.exe
+1. InstallUtil /u C:\Folder\Service.exe
