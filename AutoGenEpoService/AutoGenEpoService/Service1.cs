@@ -21,33 +21,20 @@ namespace AutoGenEpoService
         private static int min = 0;
 
         private static bool InternetConnected { get; set; }
-        
-        /*
-        // for Test
-        private static string path = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool\AutoGetMtkEpo.log";
-        private static string ConfigFile = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool\EpoConfig.cfg";
-        private static string MtkGpsBat = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool\GenVioletVfw.bat";
-        private static string MtkGpsEpoFile = @"C:\updateWithDount\VivoWatchBPtest\fw\MtkGpsTool\EPO_GR_3_1.DAT";
-        private static string MtkGpsEpoVfw = @"C:\updateWithDount\VivoWatchBPtest\fw\EPO_GR_3_1.vfw";
-        private static string FwInfoFile = @"C:\updateWithDount\VivoWatchBPtest\fw\FW_info.txt";
-        */
-        
-        // for Online
-        private static string path = @"C:\updateWithDount\Violet\fw\MtkGpsTool\AutoGetMtkEpo.log";
-        private static string ConfigFile = @"C:\updateWithDount\Violet\fw\MtkGpsTool\EpoConfig.cfg";
-        private static string MtkGpsBat = @"C:\updateWithDount\Violet\fw\MtkGpsTool\GenVioletVfw.bat";
-        private static string MtkGpsEpoFile = @"C:\updateWithDount\Violet\fw\MtkGpsTool\EPO_GR_3_1.DAT";
-        private static string MtkGpsEpoVfw = @"C:\updateWithDount\Violet\fw\EPO_GR_3_1.vfw";
-        private static string FwInfoFile = @"C:\updateWithDount\Violet\fw\FW_info.txt";
-        private static string FwInfoFileBeta = @"C:\updateWithDount\Violet\fw\FW_info_Beta.txt";
+
+        /* File Define */
+        private static string path = @"C:\Folder\mLog.log";
+        private static string ConfigFile = @"C:\Folder\mConfig.cfg";
+        private static string BatFile = @"C:\Folder\BatFileName.bat";
+        private static string HexFile = @"C:\Folder\HexFileName.hex";
+        private static string BinFile = @"C:\Folder\BinFileName.bin";
+        private static string InfoFile = @"C:\Folder\mInfo.txt";
 
         private static readonly HttpClient httpClient = new HttpClient();
         private static HttpResponseMessage response;
 
-        /* 3 Day */
-        private static String MTK_EPO_URL = "http://wpepodownload.mediatek.com/EPO_GR_3_1.DAT?vendor=ASUS&project=ASUS&device_id=EeDaFACZwOdplaFA-5t2J4Qb-gH9wt1TRDmudqI3SbM";
-        /* 7 Day */
-        //private static String MTK_EPO_URL = "http://epodownload.mediatek.com/EPO.DAT";
+        /* URL */
+        private static String URL = "http://www.google.com";
 
         public Service1()
         {
@@ -56,50 +43,50 @@ namespace AutoGenEpoService
             this.AutoLog = false;
             eventLog1 = new EventLog();
 
-            if (!System.Diagnostics.EventLog.SourceExists("MtkEpoSource"))
+            if (!System.Diagnostics.EventLog.SourceExists("ServiceSource"))
             {
 
-                System.Diagnostics.EventLog.CreateEventSource("MtkEpoSource", "MtkEpoLog");
+                System.Diagnostics.EventLog.CreateEventSource("ServiceSource", "ServiceLog");
 
             }
 
-            eventLog1.Source = "MtkEpoSource";
-            eventLog1.Log = "MtkEpoLog";
+            eventLog1.Source = "ServiceSource";
+            eventLog1.Log = "ServiceLog";
         }
 
         protected override void OnStart(string[] args)
         {
             mTimer = new Timer();
             mTimer.Elapsed += new ElapsedEventHandler(mTimer_Elapsed);
-            mTimer.Interval = 60 * 1000;
+            mTimer.Interval = 60 * 1000; // uint: ms
             mTimer.Start();
-            eventLog1.WriteEntry("Gen MTK EPO Timer Start", EventLogEntryType.Information);
+            eventLog1.WriteEntry("Download File Timer Start", EventLogEntryType.Information);
         }
 
         private void mTimer_Elapsed(object sender, EventArgs e)
         {
             min++;
-            if (min >= 20) // real: 20 test: 1
+            if (min >= 1) // 1 min check file
             {
                 min = 0;
-                GenEpoRun();
+                RunTask();
             }
         }
 
         protected override void OnStop()
         {
-            eventLog1.WriteEntry("Gen MTK EPO Timer Stop", EventLogEntryType.Information);
+            eventLog1.WriteEntry("Download File Timer Stop", EventLogEntryType.Information);
             mTimer.Stop();
             mTimer = null;
         }
 
-        public static void GenEpoRun()
+        public static void RunTask()
         {
-            DateTime FileBuildTime = File.GetLastWriteTime(MtkGpsEpoVfw);
+            DateTime FileBuildTime = File.GetLastWriteTime(BinFile);
             DateTime now = DateTime.Now;
             TimeSpan diff = DateTime.Now.Subtract(FileBuildTime);
 
-            if ((diff.TotalHours <= 16.0) || (now.Hour < 9))
+            if ((diff.TotalHours <= 12.0) || (now.Hour < 8))
             {
                 return;
             }
@@ -110,8 +97,8 @@ namespace AutoGenEpoService
             {
                 if (Download())
                 {
-                    GenEpoVfw();
-                    UpdateEpoInfo();
+                    GenBinFile();
+                    UpdateInfo();
                 }
             }
             else
@@ -121,12 +108,12 @@ namespace AutoGenEpoService
             SentMail();
         }
 
-        public static void GenEpoVfw()
+        public static void GenBinFile()
         {
-            ProcessStartInfo ActionGenEpo = new ProcessStartInfo();
-            ActionGenEpo.FileName = "GenVioletVfw.bat";//執行的檔案名稱
-            ActionGenEpo.WorkingDirectory = @"C:\updateWithDount\Violet\fw\MtkGpsTool";
-            Process star = Process.Start(ActionGenEpo);
+            ProcessStartInfo mAction = new ProcessStartInfo();
+            mAction.FileName = "BatFileName.bat"; // exec file name
+            mAction.WorkingDirectory = @"C:\Folder";
+            Process star = Process.Start(mAction);
 
             if (star.Start())
             {
@@ -138,110 +125,79 @@ namespace AutoGenEpoService
 
         public static bool Download()
         {
-            var sDownloadUrl = MTK_EPO_URL;
+            var sDownloadUrl = URL;
 
             response = httpClient.GetAsync(new Uri(sDownloadUrl)).Result;
             if (response.IsSuccessStatusCode)
             {
-                var fileStream = File.Create(MtkGpsEpoFile);
+                var fileStream = File.Create(HexFile);
                 var EpoStream = response.Content.ReadAsStreamAsync().Result;
                 EpoStream.Seek(0, SeekOrigin.Begin);
                 EpoStream.CopyTo(fileStream);
                 fileStream.Close();
                 return true;
             }
-            File.AppendAllText(path, DateTime.Now + ":\t" + "MTK Download Web Error\r\n");
+            File.AppendAllText(path, DateTime.Now + ":\t" + "Download Web Error\r\n");
             return false;
         }
 
-        public static void UpdateEpoInfo()
+        public static void UpdateInfo()
         {
-            if (!File.Exists(FwInfoFile))
+            if (!File.Exists(InfoFile))
             {
-                File.AppendAllText(path, DateTime.Now + ":\t" + "FW_info File not Exists\r\n");
+                File.AppendAllText(path, DateTime.Now + ":\t" + "Info File not Exists\r\n");
                 return;
             }
 
-            if (!File.Exists(FwInfoFileBeta))
+            if (!File.Exists(HexFile))
             {
-                File.AppendAllText(path, DateTime.Now + ":\t" + "FW_info_Beta File not Exists\r\n");
+                File.AppendAllText(path, DateTime.Now + ":\t" + "Hex File File not Exists\r\n");
                 return;
             }
 
-            if (!File.Exists(MtkGpsEpoFile))
+            if (!File.Exists(BinFile))
             {
-                File.AppendAllText(path, DateTime.Now + ":\t" + "EPO_GR_3_1 DAT File not Exists\r\n");
+                File.AppendAllText(path, DateTime.Now + ":\t" + "Bin File File not Exists\r\n");
                 return;
             }
 
-            if (!File.Exists(MtkGpsEpoVfw))
-            {
-                File.AppendAllText(path, DateTime.Now + ":\t" + "EPO_GR_3_1 vfw File not Exists\r\n");
-                return;
-            }
+            string strCompare = "\"Info\":{\"Ver\":\"";
+            var HexFileData = File.ReadAllBytes(HexFile);
+            var BinFileData = File.ReadAllBytes(BinFile);
+            var InfoData = File.ReadAllLines(InfoFile);
 
-            string strGpsCompare = "\"GPS\":{\"Ver\":\"";
-            var MtkGpsEpoData = File.ReadAllBytes(MtkGpsEpoFile);
-            var MtkGpsVfwData = File.ReadAllBytes(MtkGpsEpoVfw);
-            var FwInfoData = File.ReadAllLines(FwInfoFile);
-            var FwInfoDataBeta = File.ReadAllLines(FwInfoFileBeta);
+            UInt32 mTime = 0;
+            UInt32 mWeek = 0;
+            UInt32 mTow = 0;
 
-            UInt32 GPS_Time = 0;
-            UInt32 GPS_Week = 0;
-            UInt32 GPS_Tow = 0;
+            mTime = HexFileData[2];
+            mTime = (mTime << 8) + HexFileData[1];
+            mTime = (mTime << 8) + HexFileData[0];
+            mWeek = mTime * 3600 / 604800;
+            mTow = mTime * 3600 % 604800;
 
-            GPS_Time = MtkGpsEpoData[2];
-            GPS_Time = (GPS_Time << 8) + MtkGpsEpoData[1];
-            GPS_Time = (GPS_Time << 8) + MtkGpsEpoData[0];
-            GPS_Week = GPS_Time * 3600 / 604800;
-            GPS_Tow = GPS_Time * 3600 % 604800;
 
-            /*byte[] b_12 = BitConverter.GetBytes(12);
-            byte[] b_GPS_Week = BitConverter.GetBytes(GPS_Week);
-            byte[] b_GPS_Tow = BitConverter.GetBytes(GPS_Tow);
-            
-            Array.Reverse(b_12);
-            Array.Reverse(b_GPS_Week);
-            Array.Reverse(b_GPS_Tow);*/
+            String verInfo = 12.ToString("X") + "." + mWeek.ToString("X") + "." + mTow.ToString("X");
 
-            String EpoVerInfo = 12.ToString("X") + "." + GPS_Week.ToString("X") + "." + GPS_Tow.ToString("X");
-
-            UInt32 BinFileCrc32 = CalculateCrc32(MtkGpsVfwData, 0);
+            UInt32 BinFileCrc32 = CalculateCrc32(BinFileData, 0);
             byte[] b_BinFileCrc32 = BitConverter.GetBytes(BinFileCrc32);
             Array.Reverse(b_BinFileCrc32);
             String sBinFileCrc32 = BitConverter.ToString(b_BinFileCrc32).Replace("-", "");
 
-            int GpsLine = 0;
+            int strLine = 0;
 
-            for (int i = 0; i < FwInfoData.Length; i++)
+            for (int i = 0; i < InfoData.Length; i++)
             {
-                if (FwInfoData[i].Contains(strGpsCompare))
+                if (InfoData[i].Contains(strCompare))
                 {
-                    GpsLine = i;
+                    strLine = i;
                     break;
                 }
             }
 
-            string GpsFwInfo = " " + "\"GPS\"" + ":{" + "\"Ver\":" + "\"" + EpoVerInfo + "\"" + ",\"File\":\"EPO_GR_3_1.vfw\"," + "\"CRC\":" + "\"" + sBinFileCrc32 + "\"" + "},";
-            FwInfoData[GpsLine] = GpsFwInfo;
-            File.WriteAllLines(FwInfoFile, FwInfoData);
-
-            /*
-             * Beta Firmware Info 
-             */
-            int GpsLineBeta = 0;
-
-            for (int j = 0; j < FwInfoDataBeta.Length; j++)
-            {
-                if (FwInfoDataBeta[j].Contains(strGpsCompare))
-                {
-                    GpsLineBeta = j;
-                    break;
-                }
-            }
-
-            FwInfoDataBeta[GpsLineBeta] = GpsFwInfo;
-            File.WriteAllLines(FwInfoFileBeta, FwInfoDataBeta);
+            string strInfo = " " + "\"Info\"" + ":{" + "\"Ver\":" + "\"" + verInfo + "\"" + ",\"File\":\"BinFile.bin\"," + "\"CRC\":" + "\"" + sBinFileCrc32 + "\"" + "},";
+            InfoData[strLine] = strInfo;
+            File.WriteAllLines(InfoFile, InfoData);
         }
 
         static public UInt32 CalculateCrc32(byte[] buf, UInt32 crc)
@@ -279,20 +235,13 @@ namespace AutoGenEpoService
                 message.To.Add(new MailboxAddress("", cfg[i]));
             }
 
-            message.Subject = "MTK GPS EPO Daily Report";
+            message.Subject = "Mail Subject";
 
             var builder = new BodyBuilder();
 
-            builder.TextBody = @"Hi,
-
-MTK GPS EPO Daily Report
-
-From violet.fw server
-
-*** This is an automatically generated email, please do not reply***
-";
+            builder.TextBody = @"Hi,Mail Body";
             builder.Attachments.Add(path);
-            builder.Attachments.Add(MtkGpsEpoVfw);
+            builder.Attachments.Add(BinFile);
 
             message.Body = builder.ToMessageBody();
 
@@ -303,7 +252,7 @@ From violet.fw server
 
             smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
-            smtp.Connect("mymail.asus.com", 25, MailKit.Security.SecureSocketOptions.StartTls);
+            smtp.Connect("host", 0, MailKit.Security.SecureSocketOptions.StartTls);
 
             smtp.Authenticate(cfg[0], cfg[2]);
 
