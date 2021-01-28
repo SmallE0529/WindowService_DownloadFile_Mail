@@ -9,7 +9,7 @@ Ver: v4.0.30319
 Install service step:
 1. Open cmd.exe
 2. cd C:\Windows\Microsoft.NET\Framework64\v4.0.30319
-3. InstallUtil C:\Folder\Service.exe
+3. InstallUtil C:\[your app path]\Service.exe
 
 If you want stop service:
-1. InstallUtil /u C:\Folder\Service.exe
+1. InstallUtil /u C:\[your app path]\Service.exe
